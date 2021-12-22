@@ -89,6 +89,7 @@ const BussinessManagement = () => {
     })
   }
   
+  console.log(images);
   return (
     <Dashboard>
       <Box sx={{ backgroundColor: 'white' }}>

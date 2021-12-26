@@ -1,5 +1,5 @@
 import React from 'react'
-import {Grid,Avatar, TextField, Stack, Button, CssBaseline} from '@mui/material';
+import {Grid,Avatar, TextField,Container, Stack, Button, CssBaseline} from '@mui/material';
 import { AccountBox, AssuredWorkload, RoomService, ExitToApp, } from '@mui/icons-material';
 import { deepPurple } from '@mui/material/colors';
 /* eslint-disable no-unused-vars */
@@ -14,7 +14,6 @@ const useStyles = makeStyles((theme) => ({
     margin: '10px'
   },
   dashboard: {
-    height: '700px',
     backgroundColor: '#f5f5f5'
   },
   button: {
@@ -74,7 +73,9 @@ const Dashboard = (props) => {
             <TextField id="outlined-search" label="Search field" type="search" />
             <Avatar sx={{ bgcolor: deepPurple[500] }}>OP</Avatar>
           </Stack>
-          {props.children}
+          <Container maxWidth='lg'>
+            {props.children}
+          </Container>
         </Grid>
       </Grid>
     </>

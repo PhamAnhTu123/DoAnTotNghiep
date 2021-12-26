@@ -1,6 +1,6 @@
 /* eslint-disable array-callback-return */
 import React, { useState, useEffect } from 'react';
-import { Typography, FormControl, Button, Stack, Box, Grid, TextField, Select, MenuItem, InputLabel } from '@mui/material';
+import { Typography, FormControl, Button, Stack, Paper, Box, Grid, TextField, Select, MenuItem, InputLabel } from '@mui/material';
 import { Add } from '@mui/icons-material';
 import { storage } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -57,6 +57,7 @@ const BussinessManagement = () => {
       bussinessName: data.get('bussinessName'),
       bussinessDescription: data.get('bussinessDescription'),
       address: data.get('address'),
+      phone: data.get('phone'),
       owner: owner.id,
       city: city.id,
       availableTime: data.get('availableTime'),
@@ -92,9 +93,8 @@ const BussinessManagement = () => {
   console.log(images);
   return (
     <Dashboard>
-      <Box sx={{ backgroundColor: 'white' }}>
+      <Paper sx={{ backgroundColor: 'white' }}>
         <Stack
-          sx={{ margin: '5px' }}
           direction="row"
           justifyContent="space-between"
           alignItems="center"
@@ -103,7 +103,7 @@ const BussinessManagement = () => {
           <Typography variant='h5' color='text.secondary'>Bussiness management</Typography>
           <Button startIcon={<Add />} variant='outlined'>Add your bussiness</Button>
         </Stack>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3, marginRight: 2, }}>
+        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3, marginRight: 2, marginLeft: 2 }}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
@@ -156,6 +156,16 @@ const BussinessManagement = () => {
                 autoComplete="tag"
               />
             </Grid>
+            <Grid item xs={12}>
+              <TextField
+                required
+                fullWidth
+                id="phone"
+                label="Phone"
+                name="phone"
+                autoComplete="phone"
+              />
+            </Grid>
             <Grid item xs={6}>
               <FormControl fullWidth>
                 <InputLabel id="demo-simple-select-label">Categories</InputLabel>
@@ -205,7 +215,7 @@ const BussinessManagement = () => {
             Send Request
           </Button>
         </Box>
-      </Box>
+      </Paper>
     </Dashboard>
   )
 }

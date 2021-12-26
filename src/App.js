@@ -5,6 +5,7 @@ import Signup from "./pages/Signup";
 import BussinessListPage from "./pages/BussinessListPage";
 import Bussiness from "./pages/Bussiness";
 import BussinessManagement from "./pages/BussinessManagement";
+import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminBussiness from "./pages/AdminBussiness";
 import AdminBussinessDetail from './pages/AdminBussinessDetail';
@@ -21,8 +22,9 @@ function App() {
         <Route path='/' element={<LandingPage/>} />
         <Route path='/bussinesses' element={<BussinessListPage/>} />
         <Route path='/bussinesses/biz' element={<Bussiness/>} />
-        <Route path='/bussinesses-management' element={<BussinessManagement/>} />
-        <Route path='/services-management' element={<ServiceManagement/>} />
+        <Route path='/owners' element={<OwnerDashboard/>} />
+        <Route path='/owners/bussinesses-management' element={<BussinessManagement/>} />
+        <Route path='/owners/services-management' element={<ServiceManagement/>} />
         <Route path='/login' element={<Login/>} />
         <Route path='bussiness/login' element={<BussinessSignIn/>} />
         <Route path='admin/login' element={<AdminLogin/>} />

@@ -1,11 +1,12 @@
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 /* eslint-disable no-unused-vars */
 import { createStyles, makeStyles } from '@mui/styles';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Box, TextField, Container, Grid, Button, Stack, FormControl, Select } from '@mui/material';
+import { Box, Typography, Avatar, TextField, Container, Grid, Button, Stack, FormControl, Select } from '@mui/material';
 import { Plumbing, Restaurant, Search, Home, ArrowDropDown } from '@mui/icons-material';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import axios from 'axios';
 
 
 
@@ -23,13 +24,43 @@ const useStyles = makeStyles((theme) => ({
 const Header = () => {
   const classes = useStyles();
   const [anchorEl, setAnchorEl] = React.useState(null);
+  const [user, setUser] = useState({});
   const open = Boolean(anchorEl);
+
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
   const handleClose = () => {
     setAnchorEl(null);
   };
+
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/v1/users/me', {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('token')}`,
+      }
+    }).then(res => setUser(res.data))
+  }, [])
+
+  const getUser = () => {
+    if (window.localStorage.getItem('token')) {
+      return (
+        <Stack alignItems="center" direction='row' spacing={2}>
+          <Typography variant='h6' color='black'>{user.userName}</Typography>
+          <Button>
+            <Avatar alt={user.userName} src="/static/images/avatar/1.jpg" />
+          </Button>
+        </Stack>
+      )
+    } else {
+      return (
+        <Stack direction='row' spacing={1}>
+          <Button size='large' variant="outlined">Login</Button>
+          <Button color='error' size='large' variant="contained">Sign up</Button>
+        </Stack>
+      )
+    }
+  }
 
   return (
     <Box marginBottom='15px' className={classes.bar}>
@@ -71,10 +102,9 @@ const Header = () => {
             </Grid>
           </Grid>
         </Box>
-        <Stack direction='row' spacing={1}>
-          <Button size='large' variant="outlined">Login</Button>
-          <Button color='error' size='large' variant="contained">Sign up</Button>
-        </Stack>
+        {
+          getUser()
+        }
       </Stack>
       <Container maxWidth='md'>
         <Stack

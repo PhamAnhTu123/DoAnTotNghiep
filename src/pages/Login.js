@@ -10,6 +10,7 @@ import Grid from '@mui/material/Grid';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
+import { useNavigate } from 'react-router';
 import axios from 'axios';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 
@@ -29,7 +30,8 @@ function Copyright(props) {
 const theme = createTheme();
 
 const Login = () => {
-  const handleSubmit = (event) => {
+  const navigate = useNavigate();
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     // eslint-disable-next-line no-console
@@ -37,10 +39,13 @@ const Login = () => {
       email: data.get('email'),
       password: data.get('password'),
     });
-    axios.post('http://localhost:8080/api/v1/auth/users/login',{
+    await axios.post('http://localhost:8080/api/v1/auth/users/login',{
       email: data.get('email'),
       password: data.get('password'),
-    }).then(res => localStorage.setItem('token', res.data.token));
+    }).then(res => {
+      localStorage.setItem('token', res.data.token)
+      navigate('/')
+    });
   };
 
   return (

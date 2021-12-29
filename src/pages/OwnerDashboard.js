@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react'
 import Dashboard from '../components/Dashboard'
 import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Link from '@mui/material/Link';
-import { Grid, Paper, Button, Stack, Typography, Chip, FormControl, TextField, Select, MenuItem, InputLabel } from '@mui/material';
-import { useNavigate } from 'react-router';
+import { Grid, Paper, Button, Stack, Typography, Box, Chip, FormControl, TextField, Select, MenuItem, InputLabel } from '@mui/material';
+// import { useNavigate } from 'react-router';
+import { storage } from '../firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import TextareaAutosize from '@mui/material/TextareaAutosize';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -18,12 +20,18 @@ import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import Card from '@mui/material/Card';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
 import axios from 'axios';
 
 const OwnerDashboard = () => {
   const [bussinesses, setBussinesses] = useState([]);
   const [services, setServices] = useState([]);
   const [bussiness, setBussiness] = useState({});
+  const [news, setNews] = useState([]);
+  const [image, setImage] = useState({});
+  const [url, setUrl] = useState('');
   const [open, setOpen] = React.useState(false);
 
   const handleClickOpen = () => {
@@ -33,6 +41,26 @@ const OwnerDashboard = () => {
   const handleClose = () => {
     setOpen(false);
   };
+
+  const onSelect = (event) => {
+    setImage(event.target.files[0]);
+  }
+
+  const handleUpload = (event) => {
+    event.preventDefault();
+    const storageRef = ref(storage, `images/${image.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, image);
+    uploadTask.on("state_changed", (snapshot) => {
+
+    }, (error) => {
+      console.log(error)
+    }, () => {
+      getDownloadURL(uploadTask.snapshot.ref)
+        .then((url) => {
+          setUrl(url)
+        })
+    })
+  }
 
   useEffect(() => {
     axios.get(`http://localhost:8080/api/v1/owners/me/bussinesses`, {
@@ -51,8 +79,32 @@ const OwnerDashboard = () => {
     await axios.get(`http://localhost:8080/api/v1/bussinesses/${value[0].id}/services`).then(res => {
       setServices(res.data)
     });
-    console.log(bussiness)
+    await axios.get(`http://localhost:8080/api/v1/bussinesses/${value[0].id}/news`).then(res => {
+      setNews(res.data.docs)
+    });
   }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    // eslint-disable-next-line no-console
+    console.log({
+      title: data.get('title'),
+      content: data.get('content'),
+    });
+    await axios.post('http://localhost:8080/api/v1/news', {
+      bussiness: bussiness.id,
+      title: data.get('title'),
+      content: data.get('content'),
+      image: url,
+    }, {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('owner')}`,
+      }
+    }).then(res => setOpen(false));
+  };
+
+  console.log(news)
 
   return (
     <Dashboard>
@@ -88,25 +140,38 @@ const OwnerDashboard = () => {
               To subscribe to this website, please enter your email address here. We
               will send updates occasionally.
             </DialogContentText>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="name"
-              label="Email Address"
-              type="email"
-              fullWidth
-              variant="standard"
-            />
-            <TextareaAutosize
-              aria-label="minimum height"
-              minRows={3}
-              placeholder="Minimum 3 rows"
-              style={{ width: '100%', height: '100px' }}
-            />
+            <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="title"
+                label="Tiêu đề"
+                name="title"
+                autoComplete="title"
+                autoFocus
+              />
+              <TextareaAutosize
+                aria-label="empty textarea"
+                placeholder="Nội dung"
+                name='content'
+                style={{ width: '100%', height: '100px' }}
+              />
+              <Typography variant='h6' color='text.secondary'>Add Images</Typography>
+              <input onChange={onSelect} type='file' multiple />
+              <button onClick={handleUpload}>Upload</button>
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                Sign In
+              </Button>
+            </Box>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Cancel</Button>
-            <Button>Subscribe</Button>
           </DialogActions>
         </Dialog>
       </Stack>
@@ -247,7 +312,35 @@ const OwnerDashboard = () => {
         </Grid>
         <Grid item xs={12}>
           <Paper sx={{ p: 2 }}>
-
+            <Typography variant='h6' color='text.secondary'>
+              Tin Tức
+            </Typography>
+            <Grid container spacing={2}>
+              {
+                news.map(item => (
+                  <Grid item xs={6}>
+                    <Card sx={{ display: 'flex' }}>
+                      <CardMedia
+                        component="img"
+                        sx={{ height: 100, width: 100 }}
+                        image={item.image}
+                        alt="Live from space album cover"
+                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <CardContent sx={{ flex: '1 0 auto' }}>
+                          <Typography component="div" variant="h6">
+                            {item.title}
+                          </Typography>
+                          <Typography variant="subtitle2" color="text.secondary" component="div">
+                            {item.content}
+                          </Typography>
+                        </CardContent>
+                      </Box>
+                    </Card>
+                  </Grid>
+                ))
+              }
+            </Grid>
           </Paper>
         </Grid>
         <Grid item xs={12}>

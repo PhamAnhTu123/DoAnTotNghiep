@@ -1,14 +1,25 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react';
+import { useParams } from 'react-router-dom';
 import { CssBaseline, Grid, Container, Box, Stack, Button, Rating, Typography } from '@mui/material';
 import { Phone, Directions } from '@mui/icons-material';
 import Header from '../components/Header';
+import axios from 'axios';
 
 const Bussiness = () => {
+  const { id } = useParams();
+  const [bussiness, setBussiness] = useState({});
+
+  useEffect(() => {
+    axios.get(`http://localhost:8080/api/v1/bussinesses/${id}`).then(res => {
+      setBussiness(res.data)
+    });
+  }, [id]);
+
   return (
     <>
       <CssBaseline />
       <Header />
-      <Box sx={{ height: "400px", marginBottom: 2, backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundImage: 'linear-gradient( rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.2) ), url(https://efh.edu.vn/wp-content/uploads/2019/11/room-service-1200x600.jpg.webp)' }}>
+      <Box sx={{ height: "400px", marginBottom: 2, backgroundPosition: 'center', backgroundRepeat: 'no-repeat', backgroundSize: 'cover', backgroundImage: `linear-gradient( rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.2) ), url(${bussiness.images ? bussiness.images[0] : 'null'})` }}>
         <Container sx={{ height: '100%' }} maxWidth='lg'>
           <Stack
             sx={{ height: "100%" }}
@@ -17,14 +28,14 @@ const Bussiness = () => {
             alignItems="flex-end"
           >
             <Box>
-              <Typography sx={{ color: 'white', fontWeight: 'bold' }} variant='h3'>Gold Rush</Typography>
+              <Typography sx={{ color: 'white', fontWeight: 'bold' }} variant='h3'>{bussiness.bussinessName}</Typography>
               <Stack
                 direction='row'
                 spacing={1}
               >
-                <Rating value={4} size='large' readOnly />
+                <Rating value={bussiness.rating ? bussiness.rating.reduce((avg, rate) => {return avg+rate}, 0)/bussiness.rating.length : 2 } size='large' readOnly />
                 <Typography color='white' variant='h6'>
-                  100 reviews
+                  {bussiness.rating ? bussiness.rating.length : '10'} reviews
                 </Typography>
               </Stack>
               <Stack
@@ -35,7 +46,7 @@ const Bussiness = () => {
                   Open
                 </Typography>
                 <Typography color='white' variant='h6'>
-                  8:00 AM - 10:00 PM (Everyday)
+                  {bussiness.availableTime}
                 </Typography>
               </Stack>
             </Box>
@@ -72,7 +83,7 @@ const Bussiness = () => {
                 alignItems="center"
               >
                 <Typography variant='h6'>
-                  0986629198
+                  {bussiness.phone || 'null'}
                 </Typography>
                 <Phone />
               </Stack>
@@ -86,7 +97,7 @@ const Bussiness = () => {
                 alignItems="center"
               >
                 <Typography variant='body1'>
-                  50 Ha Huy Tan, Quan Thanh Khe, Da Nang
+                  {bussiness.address}
                 </Typography>
                 <Directions />
               </Stack>

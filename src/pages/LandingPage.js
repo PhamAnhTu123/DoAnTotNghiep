@@ -1,5 +1,5 @@
-import React from 'react';
-import { CssBaseline, Container, Button, Box, Rating, TextField, Stack, Divider, Grid, Typography, Link } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { CssBaseline, Container, Button, Avatar, Box, Menu, MenuItem, Rating, TextField, Stack, Divider, Grid, Typography, Link } from '@mui/material';
 import { Plumbing, Restaurant, Search, Home, DeliveryDining } from '@mui/icons-material';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -8,6 +8,7 @@ import CardMedia from '@mui/material/CardMedia';
 
 import '../css/LandingPage.css';
 import useStyles from '../css/LandingPage';
+import axios from 'axios';
 
 function Copyright(props) {
   return (
@@ -22,32 +23,97 @@ function Copyright(props) {
   );
 }
 
+
 function LandingPage() {
   const classes = useStyles();
+  const [user, setUser] = useState({});
+  const [bussinesses, setBussinesses] = useState([]);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const open = Boolean(anchorEl);
+
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    window.localStorage.removeItem('token');
+    window.location.reload()
+  };
+
+  useEffect(() => {
+    axios.get('http://localhost:8080/api/v1/users/me', {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('token')}`,
+      }
+    }).then(res => setUser(res.data))
+
+    axios.get('http://localhost:8080/api/v1/bussinesses?limit=3')
+      .then(res => setBussinesses(res.data.docs))
+  }, [])
+
+  const getUser = () => {
+    if (window.localStorage.getItem('token')) {
+      return (
+        <Stack alignItems="center" direction='row' spacing={2}>
+          <Typography variant='h6' color='white'>{user.userName}</Typography>
+          <Button onClick={handleClick}>
+            <Avatar alt={user.userName} src="/static/images/avatar/1.jpg" />
+          </Button>
+          <Menu
+            id="basic-menu"
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            MenuListProps={{
+              'aria-labelledby': 'basic-button',
+            }}
+          >
+            <MenuItem onClick={handleClose}>Trang cá Nhân</MenuItem>
+            <MenuItem onClick={handleClose}>Đăng Xuất</MenuItem>
+          </Menu>
+        </Stack>
+      )
+    } else {
+      return (
+        <Box>
+          <Link className={classes.navLogin} href='/login' underline='none'>
+            log in
+          </Link>
+          <Link className={classes.navButton} sx={{ marginLeft: 2 }} underline='none'>
+            <Button color='error' variant="outlined">Sign up</Button>
+          </Link>
+        </Box>
+      )
+    }
+  }
+
   return (
     <>
       <CssBaseline />
       <div className='main'>
         <div className='header'>
           <Container className='navbar' maxWidth='lg'>
-            <Link className={classes.navItem} href='#' underline='none'>
-              Write a review
-            </Link >
-            <Link className={classes.navItem} href='#' underline='none'>
-              Event
-            </Link>
-            <Link className={classes.navItem} href='#' underline='none'>
-              Talk
-            </Link>
-            <Link className={classes.navItem} href='#' underline='none'>
-              Melp for bussiness
-            </Link>
-            <Link className={classes.navLogin} sx={{ marginLeft: '500px' }} href='#' underline='none'>
-              log in
-            </Link>
-            <Link className={classes.navButton} sx={{ marginLeft: '15px' }} href='#' underline='none'>
-              <Button color='error' variant="outlined">Sign up</Button>
-            </Link>
+            <Stack
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
+              spacing={2}
+            >
+              <Box>
+                <Link className={classes.navItem} href='#' underline='none'>
+                  Write a review
+                </Link >
+                <Link className={classes.navItem} href='#' underline='none'>
+                  Event
+                </Link>
+                <Link className={classes.navItem} href='#' underline='none'>
+                  Talk
+                </Link>
+                <Link className={classes.navItem} href='#' underline='none'>
+                  Melp for bussiness
+                </Link>
+              </Box>
+              {getUser()}
+            </Stack>
           </Container>
           <Container>
             <img className={classes.logo} src='https://i2.wp.com/www.bluepearltax.com/wp-content/uploads/2017/05/yelp-logo-small-el-paso-bookkeeper.png?fit=218%2C140&ssl=1' alt='asds' />
@@ -231,63 +297,31 @@ function LandingPage() {
           <Typography sx={{ color: 'red', paddingTop: '15px' }} textAlign='center' gutterBottom variant='h6'>Hot bussinesses</Typography>
           <Container maxWidth='md'>
             <Grid container spacing={2}>
-              <Grid item sm={4}>
-                <Card sx={{ maxWidth: 345 }}>
-                  <CardMedia
-                    component="img"
-                    height="150"
-                    image="https://leerit.com/media/blog/uploads/2015/04/08/tu-vung-tieng-anh-ve-nha-hang.jpeg"
-                    alt="green iguana"
-                  />
-                  <CardContent>
-                    <Typography gutterBottom variant="h6" component="div">
-                      Machiya
-                    </Typography>
-                    <Rating name="read-only" value={3} readOnly />
-                    <Typography variant="body2" color="text.secondary">
-                      French food for two people each table, totally free space
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item sm={4}>
-                <Card sx={{ maxWidth: 345 }}>
-                  <CardMedia
-                    component="img"
-                    height="150"
-                    image="https://www.sashimihome.com/wp-content/uploads/Sushi-v%C3%A0-Sashimi-Gi%E1%BB%91ng-v%C3%A0-Kh%C3%A1c-Nhau-Nh%C6%B0-N%C3%A0o.jpg"
-                    alt="green iguana"
-                  />
-                  <CardContent>
-                    <Typography gutterBottom variant="h6" component="div">
-                      Shushi Dushi
-                    </Typography>
-                    <Rating name="read-only" value={3} readOnly />
-                    <Typography variant="body2" color="text.secondary">
-                      Best shushi in town, come from legit traditional japanese family
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item sm={4} spacing={1}>
-                <Card sx={{ maxWidth: 345 }}>
-                  <CardMedia
-                    component="img"
-                    height="150"
-                    image="https://www.kitchensanctuary.com/wp-content/uploads/2018/01/Crispy-Chilli-Beef-Noodles-recipe-square-FS.jpg"
-                    alt="green iguana"
-                  />
-                  <CardContent>
-                    <Typography gutterBottom variant="h6" component="div">
-                      Hongkong Beef noodle
-                    </Typography>
-                    <Rating name="read-only" value={3} readOnly />
-                    <Typography variant="body2" color="text.secondary">
-                      Favorite beef noodle and  chinese food
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+              {
+                bussinesses.map(bussiness => (
+                  <Grid item sm={4}>
+                    <Link href='#' underline='none'>
+                      <Card sx={{ maxWidth: 345 }}>
+                        <CardMedia
+                          component="img"
+                          height="150"
+                          image={bussiness.images[0]}
+                          alt="green iguana"
+                        />
+                        <CardContent>
+                          <Typography gutterBottom variant="h6" component="div">
+                            {bussiness.bussinessName}
+                          </Typography>
+                          <Rating name="read-only" value={bussiness.rating.reduce((avg, rate) => {return avg+rate}, 0)/bussiness.rating.length} readOnly />
+                          <Typography variant="body2" color="text.secondary">
+                            {bussiness.bussinessDescription}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </Grid>
+                ))
+              }
             </Grid>
           </Container>
           <Stack
@@ -295,7 +329,7 @@ function LandingPage() {
             justifyContent="center"
             alignItems="center"
           >
-            <Link sx={{padding: 1}}>See more hot and new bussinesses</Link>
+            <Link href='#' sx={{ padding: 1 }}>See more hot and new bussinesses</Link>
           </Stack>
         </div>
         <Copyright sx={{ mt: 8, mb: 4 }} />

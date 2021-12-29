@@ -20,8 +20,8 @@ function App() {
     <Router>
       <Routes>
         <Route path='/' element={<LandingPage/>} />
-        <Route path='/bussinesses' element={<BussinessListPage/>} />
-        <Route path='/bussinesses/biz' element={<Bussiness/>} />
+        <Route path='/bussinesses/:category' element={<BussinessListPage/>} />
+        <Route path='/bussinesses/:category/:id' element={<Bussiness/>} />
         <Route path='/owners' element={<OwnerDashboard/>} />
         <Route path='/owners/bussinesses-management' element={<BussinessManagement/>} />
         <Route path='/owners/services-management' element={<ServiceManagement/>} />

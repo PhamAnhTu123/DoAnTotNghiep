@@ -1,19 +1,95 @@
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { CssBaseline, Grid, Container, Box, Stack, Button, Rating, Typography } from '@mui/material';
-import { Phone, Directions } from '@mui/icons-material';
+import { CssBaseline, TextField, Chip, Link, CardActions, Avatar, Grid, Container, Box, Stack, Button, Rating, Typography } from '@mui/material';
+import Card from '@mui/material/Card';
+import { storage } from '../firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import TextareaAutosize from '@mui/material/TextareaAutosize';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import CardContent from '@mui/material/CardContent';
+import CardMedia from '@mui/material/CardMedia';
+import { Phone, Directions, ThumbUp } from '@mui/icons-material';
 import Header from '../components/Header';
 import axios from 'axios';
 
 const Bussiness = () => {
-  const { id } = useParams();
+  const { id, category } = useParams();
   const [bussiness, setBussiness] = useState({});
+  const [ratingValue, setRatingValue] = React.useState(0);
+  const [bussinesses, setBussinesses] = useState([]);
+  const [image, setImage] = useState({});
+  const [url, setUrl] = useState('');
+  const [news, setNews] = useState([]);
+  const [services, setServices] = useState([]);
+  const [open, setOpen] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  const onSelect = (event) => {
+    setImage(event.target.files[0]);
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    // eslint-disable-next-line no-console
+    console.log({
+      title: data.get('title'),
+      content: data.get('content'),
+    });
+    await axios.post('http://localhost:8080/api/v1/reviews', {
+      bussiness: bussiness.id,
+      title: data.get('title'),
+      content: data.get('content'),
+      point: ratingValue,
+      image: url,
+    }, {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('token')}`,
+      }
+    }).then(res => setOpen(false));
+  };
+
+  const handleUpload = (event) => {
+    event.preventDefault();
+    const storageRef = ref(storage, `images/${image.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, image);
+    uploadTask.on("state_changed", (snapshot) => {
+
+    }, (error) => {
+      console.log(error)
+    }, () => {
+      getDownloadURL(uploadTask.snapshot.ref)
+        .then((url) => {
+          setUrl(url)
+        })
+    })
+  }
 
   useEffect(() => {
     axios.get(`http://localhost:8080/api/v1/bussinesses/${id}`).then(res => {
       setBussiness(res.data)
     });
-  }, [id]);
+    axios.get(`http://localhost:8080/api/v1/bussinesses/${id}/news?limit=4`).then(res => {
+      setNews(res.data.docs)
+    })
+    axios.get(`http://localhost:8080/api/v1/bussinesses/${id}/services`).then(res => {
+      setServices(res.data)
+    })
+    axios.get(`http://localhost:8080/api/v1/bussinesses?limit=5&category=${category}`).then(res => {
+      setBussinesses(res.data.docs);
+    })
+  }, [id, category]);
 
   return (
     <>
@@ -33,7 +109,7 @@ const Bussiness = () => {
                 direction='row'
                 spacing={1}
               >
-                <Rating value={bussiness.rating ? bussiness.rating.reduce((avg, rate) => {return avg+rate}, 0)/bussiness.rating.length : 2 } size='large' readOnly />
+                <Rating value={bussiness.rating ? bussiness.rating.reduce((avg, rate) => { return avg + rate }, 0) / bussiness.rating.length : 2} size='large' readOnly />
                 <Typography color='white' variant='h6'>
                   {bussiness.rating ? bussiness.rating.length : '10'} reviews
                 </Typography>
@@ -60,7 +136,7 @@ const Bussiness = () => {
         <Grid container spacing={2}>
           <Grid item xs={8}>
             <Stack direction='row' spacing={2}>
-              <Button variant='contained' color='error' size='large'>
+              <Button onClick={handleClickOpen} variant='contained' color='error' size='large'>
                 Write a review
               </Button>
               <Button variant='outlined' color='error' size='large'>
@@ -73,11 +149,167 @@ const Bussiness = () => {
                 Save
               </Button>
             </Stack>
+            <Dialog open={open} onClose={handleClose}>
+              <DialogTitle>Subscribe</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  To subscribe to this website, please enter your email address here. We
+                  will send updates occasionally.
+                </DialogContentText>
+                <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="title"
+                    label="Tiêu đề"
+                    name="title"
+                    autoComplete="title"
+                    autoFocus
+                  />
+                  <TextareaAutosize
+                    aria-label="empty textarea"
+                    placeholder="Nội dung"
+                    name='content'
+                    style={{ width: '100%', height: '100px' }}
+                  />
+                  <Typography variant='h6' color='text.secondary'>Đánh Giá</Typography>
+                  <Rating 
+                    name="size-large" 
+                    value={ratingValue}
+                    onChange={(event, newValue) => {
+                      setRatingValue(newValue);
+                    }} 
+                    size="large" />
+                  <Typography variant='h6' color='text.secondary'>Thêm Ảnh</Typography>
+                  <input onChange={onSelect} type='file' multiple />
+                  <button onClick={handleUpload}>Upload</button>
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                  >
+                    Đánh Giá
+                  </Button>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose}>Cancel</Button>
+              </DialogActions>
+            </Dialog>
+            <hr />
+            <Typography underline='none' sx={{ marginTop: 2 }} variant='h6'>Thông Báo</Typography>
+            <Grid container spacing={2}>
+              {
+                news.map(info => (
+                  <Grid key={info.id} item xs={12}>
+                    <Card sx={{ display: 'flex' }}>
+                      <CardMedia
+                        component="img"
+                        sx={{ width: 151 }}
+                        image={info.image}
+                        alt="Live from space album cover"
+                      />
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <CardContent sx={{ flex: '1 0 auto' }}>
+                          <Typography component="div" variant="h6">
+                            {info.title}
+                          </Typography>
+                          <Typography variant="subtitle2" color="text.secondary" component="div">
+                            {info.content}
+                          </Typography>
+                        </CardContent>
+                      </Box>
+                    </Card>
+                  </Grid>
+                ))
+              }
+            </Grid>
+            <Link underline='none' href='#'>
+              <Typography textAlign='center' variant='subtitle2'>xem thêm thông báo</Typography>
+            </Link>
+            <hr />
+            <Typography sx={{ marginTop: 2 }} variant='h6'>Dịch Vụ</Typography>
+            <Grid container spacing={2}>
+              {
+                services.map(service => (
+                  <Grid key={service.id} item xs={6}>
+                    <Card sx={{ display: 'flex', justifyContent: "space-between" }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                        <CardContent sx={{ flex: '1 0 auto' }}>
+                          <Typography component="div" variant="h6">
+                            {service.serviceName}
+                          </Typography>
+                          <Typography variant="subtitle2" color="text.secondary" component="div">
+                            {service.serviceDescription}
+                          </Typography>
+                          <Typography variant="subtitle2" color="text.secondary" component="div">
+                            {service.servicePrice} VND
+                          </Typography>
+                        </CardContent>
+                      </Box>
+                      <CardMedia
+                        component="img"
+                        sx={{ width: 151 }}
+                        image={service.image}
+                        alt={service.image}
+                      />
+                    </Card>
+                  </Grid>
+                ))
+              }
+            </Grid>
+            <Link underline='none' href='#'>
+              <Typography textAlign='center' variant='subtitle2'>xem thêm dịch vụ</Typography>
+            </Link>
+            <hr />
+            <Typography sx={{ marginTop: 2 }} variant='h6'>Đánh Giá (2)</Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <Card>
+                  <CardContent>
+                    <Stack
+                      direction="row"
+                      justifyContent="flex-start"
+                      alignItems="center"
+                      spacing={2}
+                    >
+                      <Avatar
+                        alt="Remy Sharp"
+                        src="/static/images/avatar/1.jpg"
+                        sx={{ width: 56, height: 56 }}
+                      />
+                      <Typography gutterBottom variant="h5" component="div">
+                        Lizard
+                      </Typography>
+                    </Stack>
+                    <Rating value={3} size='large' readOnly />
+                    <Typography gutterBottom variant="h5" component="div">
+                      Lizard
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Lizards are a widespread group of squamate reptiles, with over 6,000
+                      species, ranging across all continents except Antarctica
+                    </Typography>
+                  </CardContent>
+                  <CardMedia
+                    component="img"
+                    alt="green iguana"
+                    height="300"
+                    image="https://paroda.vn/media/2021/08/thai-do-tich-cuc.jpg"
+                  />
+                  <CardActions>
+                    <Button size="small" color='error' variant='outlined' startIcon={<ThumbUp />}>Hữu ích</Button>
+                  </CardActions>
+                </Card>
+              </Grid>
+            </Grid>
           </Grid>
           <Grid item xs={4}>
-            <Box sx={{ border: 'solid 1px #7a857e', borderRadius: '5px' }}>
+            <Box sx={{ border: 'solid 1px #bababa', borderRadius: '5px' }}>
               <Stack
-                sx={{ padding: '5px', borderBottom: 'solid 1px #7a857e' }}
+                sx={{ padding: '5px', borderBottom: 'solid 1px #bababa' }}
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
@@ -87,11 +319,11 @@ const Bussiness = () => {
                 </Typography>
                 <Phone />
               </Stack>
-              <Typography color='blue' sx={{marginLeft: '5px'}} variant='h6'>
+              <Typography color='blue' sx={{ marginLeft: '5px' }} variant='h6'>
                 Direction
               </Typography>
               <Stack
-                sx={{ padding: '5px', borderBottom: 'solid 1px #f5f5f5' }}
+                sx={{ padding: '5px' }}
                 direction="row"
                 justifyContent="space-between"
                 alignItems="center"
@@ -102,6 +334,38 @@ const Bussiness = () => {
                 <Directions />
               </Stack>
             </Box>
+            <Typography sx={{ marginTop: 2 }} gutterBottom variant='h6'>Có thể bạn sẽ thích</Typography>
+            <Stack
+              spacing={2}
+            >
+              {
+                bussinesses.filter(buss => buss.id !== bussiness.id).map(bussiness => (
+                  <Card key={bussiness.id} sx={{ maxHeight: 350 }}>
+                    <CardMedia
+                      component="img"
+                      sx={{ height: '200px', width: '100%' }}
+                      image={bussiness.images[0]}
+                      alt="Live from space album cover"
+                    />
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <CardContent sx={{ flex: '1 0 auto' }}>
+                        <Typography component="div" variant="h5">
+                          {bussiness.bussinessName}
+                        </Typography>
+                        <Rating name="read-only" value={bussiness.rating.reduce((avg, rate) => { return avg + rate }, 0) / bussiness.rating.length} readOnly />
+                        <Stack direction="row" spacing={1}>
+                          {
+                            bussiness.tags ? bussiness.tags.map((tag) => (
+                              <Chip label={tag} key={tag} />
+                            )) : 'null'
+                          }
+                        </Stack>
+                      </CardContent>
+                    </Box>
+                  </Card>
+                ))
+              }
+            </Stack>
           </Grid>
         </Grid>
       </Container>

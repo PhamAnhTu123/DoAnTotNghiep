@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { CssBaseline, TextField, Chip, Link, CardActions, Avatar, Grid, Container, Box, Stack, Button, Rating, Typography } from '@mui/material';
+import { CssBaseline, FormControl, InputLabel, MenuItem, Select, TextField, Chip, Link, CardActions, Avatar, Grid, Container, Box, Stack, Button, Rating, Typography } from '@mui/material';
 import Card from '@mui/material/Card';
 import { storage } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -19,13 +19,18 @@ import axios from 'axios';
 const Bussiness = () => {
   const { id, category } = useParams();
   const [bussiness, setBussiness] = useState({});
+  const [reviews, setReviews] = useState([]);
   const [ratingValue, setRatingValue] = React.useState(0);
   const [bussinesses, setBussinesses] = useState([]);
+  const [collections, setCollections] = useState([]);
+  const [collection, setCollection] = useState({});
   const [image, setImage] = useState({});
   const [url, setUrl] = useState('');
   const [news, setNews] = useState([]);
   const [services, setServices] = useState([]);
   const [open, setOpen] = React.useState(false);
+  const [openSave, setOpenSave] = useState(false);
+  const [openCollection, setOpenCollection] = useState(false);
 
   const handleClickOpen = () => {
     setOpen(true);
@@ -35,8 +40,25 @@ const Bussiness = () => {
     setOpen(false);
   };
 
+  const handleClickOpenSave = () => {
+    setOpenSave(true);
+  };
+
+  const handleCloseSave = () => {
+    setOpenSave(false);
+  };
+
+  const handleCloseCollection = () => {
+    setOpenCollection(false);
+  };
+
   const onSelect = (event) => {
     setImage(event.target.files[0]);
+  }
+
+  const onColectionSelect = (event) => {
+    console.log(event)
+    setCollection(event.target.value);
   }
 
   const handleSubmit = async (event) => {
@@ -57,7 +79,52 @@ const Bussiness = () => {
       headers: {
         "Authorization": `Bearer ${window.localStorage.getItem('token')}`,
       }
-    }).then(res => setOpen(false));
+    }).then(res => {
+      console.log(res)
+      setOpen(false)
+    });
+  };
+
+  const handleSubmitCollection = async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    // eslint-disable-next-line no-console
+    console.log({
+      title: data.get('title'),
+      content: data.get('content'),
+    });
+    await axios.post('http://localhost:8080/api/v1/collections', {
+      collectionName: data.get('title'),
+      collectionDescription: data.get('content'),
+    }, {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('token')}`,
+      }
+    }).then(res => setOpenCollection(false));
+    await axios.get('http://localhost:8080/api/v1/users/me/collection', {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('token')}`,
+      }
+    }).then(res => {
+      setCollections(res.data);
+    });
+  };
+
+  const handleSubmitSave = async (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    // eslint-disable-next-line no-console
+    console.log({
+      title: data.get('title'),
+      content: data.get('content'),
+    });
+    await axios.put(`http://localhost:8080/api/v1/collections/${collection.id}`, {
+      bussiness: bussiness.id,
+    }, {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('token')}`,
+      }
+    }).then(res => setOpenSave(false));
   };
 
   const handleUpload = (event) => {
@@ -78,6 +145,7 @@ const Bussiness = () => {
 
   useEffect(() => {
     axios.get(`http://localhost:8080/api/v1/bussinesses/${id}`).then(res => {
+      console.log(res.data)
       setBussiness(res.data)
     });
     axios.get(`http://localhost:8080/api/v1/bussinesses/${id}/news?limit=4`).then(res => {
@@ -89,6 +157,17 @@ const Bussiness = () => {
     axios.get(`http://localhost:8080/api/v1/bussinesses?limit=5&category=${category}`).then(res => {
       setBussinesses(res.data.docs);
     })
+    axios.get('http://localhost:8080/api/v1/users/me/collection', {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('token')}`,
+      }
+    }).then(res => {
+      setCollections(res.data);
+    });
+    axios.get(`http://localhost:8080/api/v1/bussinesses/${id}/reviews?limit=10`)
+      .then(res => {
+        setReviews(res.data.docs)
+      })
   }, [id, category]);
 
   return (
@@ -109,7 +188,7 @@ const Bussiness = () => {
                 direction='row'
                 spacing={1}
               >
-                <Rating value={bussiness.rating ? bussiness.rating.reduce((avg, rate) => { return avg + rate }, 0) / bussiness.rating.length : 2} size='large' readOnly />
+                <Rating name="read-only" precision={0.5} size='large' value={bussiness.rating ? bussiness.rating.reduce((avg, rate) => {return avg+rate}, 0)/bussiness.rating.length : 4} readOnly />
                 <Typography color='white' variant='h6'>
                   {bussiness.rating ? bussiness.rating.length : '10'} reviews
                 </Typography>
@@ -145,16 +224,15 @@ const Bussiness = () => {
               <Button variant='outlined' color='error' size='large'>
                 Share
               </Button>
-              <Button variant='outlined' color='error' size='large'>
+              <Button onClick={handleClickOpenSave} variant='outlined' color='error' size='large'>
                 Save
               </Button>
             </Stack>
             <Dialog open={open} onClose={handleClose}>
-              <DialogTitle>Subscribe</DialogTitle>
+              <DialogTitle>Đánh Giá</DialogTitle>
               <DialogContent>
                 <DialogContentText>
-                  To subscribe to this website, please enter your email address here. We
-                  will send updates occasionally.
+                  Để lại đánh giá của bạn để doanh nghiệp càng ngày càng phát triển
                 </DialogContentText>
                 <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
                   <TextField
@@ -174,12 +252,12 @@ const Bussiness = () => {
                     style={{ width: '100%', height: '100px' }}
                   />
                   <Typography variant='h6' color='text.secondary'>Đánh Giá</Typography>
-                  <Rating 
-                    name="size-large" 
+                  <Rating
+                    name="size-large"
                     value={ratingValue}
                     onChange={(event, newValue) => {
                       setRatingValue(newValue);
-                    }} 
+                    }}
                     size="large" />
                   <Typography variant='h6' color='text.secondary'>Thêm Ảnh</Typography>
                   <input onChange={onSelect} type='file' multiple />
@@ -196,6 +274,92 @@ const Bussiness = () => {
               </DialogContent>
               <DialogActions>
                 <Button onClick={handleClose}>Cancel</Button>
+              </DialogActions>
+            </Dialog>
+            <Dialog open={openSave} onClose={handleCloseSave}>
+              <DialogTitle>Lưu Vào Danh Sách</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Lưu danh sách yêu thích của bạn
+                </DialogContentText>
+                <Box component="form" onSubmit={handleSubmitSave} noValidate sx={{ mt: 1 }}>
+                  <FormControl fullWidth>
+                    <InputLabel id="demo-simple-select-label">Danh sách</InputLabel>
+                    <Select
+                      labelId="demo-simple-select-label"
+                      id="demo-simple-select"
+                      value={collection}
+                      label='Categories'
+                      onChange={onColectionSelect}
+                    >
+                      {
+                        collections.map((collection) => (
+                          <MenuItem key={collection.id} value={collection}>{collection.collectionName}</MenuItem>
+                        ))
+                      }
+                    </Select>
+                  </FormControl>
+                  <Stack spacing={1}>
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      sx={{ mt: 3, mb: 2 }}
+                    >
+                      Lưu danh sách
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="outlined"
+                      sx={{ mt: 3, mb: 2 }}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        setOpenCollection(true)
+                      }}
+                    >
+                      Tạo danh sách mới
+                    </Button>
+                  </Stack>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseSave}>Cancel</Button>
+              </DialogActions>
+            </Dialog>
+            <Dialog open={openCollection} onClose={handleCloseCollection}>
+              <DialogTitle>Thêm Danh Sách Yêu Thích</DialogTitle>
+              <DialogContent>
+                <DialogContentText>
+                  Tạo Danh Sách yêu thích mới của bạn
+                </DialogContentText>
+                <Box component="form" onSubmit={handleSubmitCollection} noValidate sx={{ mt: 1 }}>
+                  <TextField
+                    margin="normal"
+                    required
+                    fullWidth
+                    id="title"
+                    label="Tiêu đề"
+                    name="title"
+                    autoComplete="title"
+                    autoFocus
+                  />
+                  <TextareaAutosize
+                    aria-label="empty textarea"
+                    placeholder="Nội dung"
+                    name='content'
+                    style={{ width: '100%', height: '100px' }}
+                  />
+                  <Button
+                    type="submit"
+                    fullWidth
+                    variant="contained"
+                    sx={{ mt: 3, mb: 2 }}
+                  >
+                    Thêm Danh Sách
+                  </Button>
+                </Box>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleCloseCollection}>Cancel</Button>
               </DialogActions>
             </Dialog>
             <hr />
@@ -264,46 +428,49 @@ const Bussiness = () => {
               <Typography textAlign='center' variant='subtitle2'>xem thêm dịch vụ</Typography>
             </Link>
             <hr />
-            <Typography sx={{ marginTop: 2 }} variant='h6'>Đánh Giá (2)</Typography>
+            <Typography sx={{ marginTop: 2 }} variant='h6'>Đánh Giá ({bussiness.rating ? bussiness.rating.length : '0'})</Typography>
             <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <Card>
-                  <CardContent>
-                    <Stack
-                      direction="row"
-                      justifyContent="flex-start"
-                      alignItems="center"
-                      spacing={2}
-                    >
-                      <Avatar
-                        alt="Remy Sharp"
-                        src="/static/images/avatar/1.jpg"
-                        sx={{ width: 56, height: 56 }}
+              {
+                reviews.map(review => (
+                  <Grid item xs={12}>
+                    <Card>
+                      <CardContent>
+                        <Stack
+                          direction="row"
+                          justifyContent="flex-start"
+                          alignItems="center"
+                          spacing={2}
+                        >
+                          <Avatar
+                            alt="Remy Sharp"
+                            src={review.user.avatar}
+                            sx={{ width: 56, height: 56 }}
+                          />
+                          <Typography gutterBottom variant="h5" component="div">
+                            {review.user.userName}
+                          </Typography>
+                        </Stack>
+                        <Rating value={review.point} size='large' readOnly />
+                        <Typography gutterBottom variant="h5" component="div">
+                          {review.title}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {review.content}
+                        </Typography>
+                      </CardContent>
+                      <CardMedia
+                        component="img"
+                        alt="green iguana"
+                        height="300"
+                        image={review.image}
                       />
-                      <Typography gutterBottom variant="h5" component="div">
-                        Lizard
-                      </Typography>
-                    </Stack>
-                    <Rating value={3} size='large' readOnly />
-                    <Typography gutterBottom variant="h5" component="div">
-                      Lizard
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Lizards are a widespread group of squamate reptiles, with over 6,000
-                      species, ranging across all continents except Antarctica
-                    </Typography>
-                  </CardContent>
-                  <CardMedia
-                    component="img"
-                    alt="green iguana"
-                    height="300"
-                    image="https://paroda.vn/media/2021/08/thai-do-tich-cuc.jpg"
-                  />
-                  <CardActions>
-                    <Button size="small" color='error' variant='outlined' startIcon={<ThumbUp />}>Hữu ích</Button>
-                  </CardActions>
-                </Card>
-              </Grid>
+                      <CardActions>
+                        <Button size="small" color='error' variant='outlined' startIcon={<ThumbUp />}>Hữu ích</Button>
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))
+              }
             </Grid>
           </Grid>
           <Grid item xs={4}>
@@ -352,7 +519,7 @@ const Bussiness = () => {
                         <Typography component="div" variant="h5">
                           {bussiness.bussinessName}
                         </Typography>
-                        <Rating name="read-only" value={bussiness.rating.reduce((avg, rate) => { return avg + rate }, 0) / bussiness.rating.length} readOnly />
+                        <Rating name="read-only" precision={0.5} value={bussiness.rating.reduce((avg, rate) => { return avg + rate }, 0) / bussiness.rating.length} readOnly />
                         <Stack direction="row" spacing={1}>
                           {
                             bussiness.tags ? bussiness.tags.map((tag) => (

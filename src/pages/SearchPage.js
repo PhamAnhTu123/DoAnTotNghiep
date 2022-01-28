@@ -5,7 +5,7 @@ import Header from '../components/Header'
 import { CssBaseline, Pagination, Rating, Chip, Box, Link, Card, CardContent, CardMedia, Breadcrumbs, Container, Stack, Typography, Button, Menu, MenuItem } from '@mui/material';
 import { ArrowDropDown } from '@mui/icons-material';
 
-const BussinessListPage = () => {
+const SearchPage = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [bussinesses, setBussinesses] = useState([]);
   const [searchTerms, setSearchTerms] = useSearchParams();
@@ -25,7 +25,7 @@ const BussinessListPage = () => {
 
   const handleChange = async (event, value) => {
     setPage(value);
-    await axios.get(`http://localhost:8080/api/v1/bussinesses?category=${category}&limit=${5}&page=${value}`).then(res => {
+    await axios.get(`http://localhost:8080/api/v1/bussinesses?limit=${5}&page=${value}`).then(res => {
       setBussinesses(res.data.docs)
       setTabs(res.data.totalPages)
     });
@@ -53,11 +53,12 @@ const BussinessListPage = () => {
   }
 
   useEffect(() => {
-    axios.get(`http://localhost:8080/api/v1/bussinesses?category=${category}&limit=${5}`).then(res => {
+    axios.get(`http://localhost:8080/api/v1/bussinesses?search=${search}`).then(res => {
       setBussinesses(res.data.docs)
+      console.log(res.data)
       setTabs(res.data.totalPages)
     });
-  }, [category])
+  }, [search])
 
   return (
     <>
@@ -70,7 +71,7 @@ const BussinessListPage = () => {
               Da Nang
             </Link>
             <Link underline='hover' href='#' color="inherit">
-              {category}
+              Search
             </Link>
           </Breadcrumbs>
           <Stack
@@ -148,6 +149,6 @@ const BussinessListPage = () => {
       </Box>
     </>
   )
-}
+};
 
-export default BussinessListPage
+export default SearchPage;

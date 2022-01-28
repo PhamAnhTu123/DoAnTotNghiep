@@ -48,7 +48,7 @@ const Header = () => {
         <Stack alignItems="center" direction='row' spacing={2}>
           <Typography variant='h6' color='black'>{user.userName}</Typography>
           <Button>
-            <Avatar alt={user.userName} src="/static/images/avatar/1.jpg" />
+            <Avatar alt={user.userName} src={user.avatar} />
           </Button>
         </Stack>
       )

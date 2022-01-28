@@ -13,6 +13,10 @@ import TestImage from "./pages/TestImage";
 import BussinessSignIn from "./pages/BussinessSignIn";
 import AdminLogin from "./pages/AdminLogin";
 import ServiceManagement from "./pages/ServiceManagement";
+import UserProfile from "./pages/UserProfile";
+import Collection from './pages/Collection';
+import EditUser from "./pages/EditUser";
+import SearchPage from "./pages/SearchPage";
 
 
 function App() {
@@ -20,8 +24,12 @@ function App() {
     <Router>
       <Routes>
         <Route path='/' element={<LandingPage/>} />
+        <Route path='/me' element={<UserProfile/>} />
+        <Route path='/me/profile' element={<EditUser/>} />
+        <Route path='me/collections/:id' element={<Collection/>} />
         <Route path='/bussinesses/:category' element={<BussinessListPage/>} />
         <Route path='/bussinesses/:category/:id' element={<Bussiness/>} />
+        <Route path='/bussinesses/search' element={<SearchPage/>} />
         <Route path='/owners' element={<OwnerDashboard/>} />
         <Route path='/owners/bussinesses-management' element={<BussinessManagement/>} />
         <Route path='/owners/services-management' element={<ServiceManagement/>} />

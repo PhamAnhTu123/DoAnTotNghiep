@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CssBaseline, Container, Button, Avatar, Box, Menu, MenuItem, Rating, TextField, Stack, Divider, Grid, Typography, Link } from '@mui/material';
 import { Plumbing, Restaurant, Search, Home, DeliveryDining } from '@mui/icons-material';
 import Card from '@mui/material/Card';
+import { useNavigate } from 'react-router';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
@@ -25,6 +26,7 @@ function Copyright(props) {
 
 
 function LandingPage() {
+  const navigate = useNavigate();
   const classes = useStyles();
   const [user, setUser] = useState({});
   const [bussinesses, setBussinesses] = useState([]);
@@ -39,6 +41,13 @@ function LandingPage() {
     window.location.reload()
   };
 
+  const search = (event) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    console.log(data.get('firstName'))
+    navigate(`/bussinesses/search?q=${data.get('firstName')}`)
+  }
+
   useEffect(() => {
     axios.get('http://localhost:8080/api/v1/users/me', {
       headers: {
@@ -47,7 +56,10 @@ function LandingPage() {
     }).then(res => setUser(res.data))
 
     axios.get('http://localhost:8080/api/v1/bussinesses?limit=3')
-      .then(res => setBussinesses(res.data.docs))
+      .then(res => {
+        console.log(res.data)
+        setBussinesses(res.data.docs)
+      })
   }, [])
 
   const getUser = () => {
@@ -56,7 +68,7 @@ function LandingPage() {
         <Stack alignItems="center" direction='row' spacing={2}>
           <Typography variant='h6' color='white'>{user.userName}</Typography>
           <Button onClick={handleClick}>
-            <Avatar alt={user.userName} src="/static/images/avatar/1.jpg" />
+            <Avatar alt={user.userName} src={user.avatar}/>
           </Button>
           <Menu
             id="basic-menu"
@@ -76,10 +88,10 @@ function LandingPage() {
       return (
         <Box>
           <Link className={classes.navLogin} href='/login' underline='none'>
-            log in
+            Đăng Nhập
           </Link>
           <Link className={classes.navButton} sx={{ marginLeft: 2 }} underline='none'>
-            <Button color='error' variant="outlined">Sign up</Button>
+            <Button color='error' variant="outlined">Đăng ký</Button>
           </Link>
         </Box>
       )
@@ -100,16 +112,16 @@ function LandingPage() {
             >
               <Box>
                 <Link className={classes.navItem} href='#' underline='none'>
-                  Write a review
+                  Để lại đánh giá
                 </Link >
                 <Link className={classes.navItem} href='#' underline='none'>
-                  Event
+                  Sự kiện
                 </Link>
                 <Link className={classes.navItem} href='#' underline='none'>
-                  Talk
+                  Trò chuyện
                 </Link>
                 <Link className={classes.navItem} href='#' underline='none'>
-                  Melp for bussiness
+                  Melp cho doanh nghiệp
                 </Link>
               </Box>
               {getUser()}
@@ -119,7 +131,7 @@ function LandingPage() {
             <img className={classes.logo} src='https://i2.wp.com/www.bluepearltax.com/wp-content/uploads/2017/05/yelp-logo-small-el-paso-bookkeeper.png?fit=218%2C140&ssl=1' alt='asds' />
           </Container>
           <Container>
-            <Box component='form'>
+            <Box onSubmit={search} component='form'>
               <Grid container spacing={0}>
                 <Grid item xs={12} sm={5}>
                   <TextField
@@ -136,7 +148,6 @@ function LandingPage() {
                 </Grid>
                 <Grid sx={{ borderLeft: 'solid 1px black' }} item xs={12} sm={5}>
                   <TextField
-                    required
                     fullWidth
                     id="Near"
                     label="Near"
@@ -147,7 +158,7 @@ function LandingPage() {
                   />
                 </Grid>
                 <Grid item xs={12} sm={1}>
-                  <Button sx={{ height: '100%' }} color='error' variant="contained" size='large'><Search /></Button>
+                  <Button sx={{ height: '100%' }} type='submit' color='error' variant="contained" size='large'><Search /></Button>
                 </Grid>
               </Grid>
             </Box>
@@ -155,16 +166,16 @@ function LandingPage() {
           <Container sx={{ marginTop: 2 }} maxWidth='md'>
             <Grid container>
               <Grid item sm={3}>
-                <Button startIcon={<Plumbing />} color='error' variant="text" size='medium'>Plumber</Button>
+                <Button href="http://localhost:3000/bussinesses/điện nước" startIcon={<Plumbing />} color='error' variant="text" size='medium'>Điện nước</Button>
               </Grid>
               <Grid item sm={3}>
-                <Button startIcon={<Restaurant />} color='error' variant="text" size='medium'>Restaurant</Button>
+                <Button href="http://localhost:3000/bussinesses/Restaurants" startIcon={<Restaurant />} color='error' variant="text" size='medium'>Nhà Hàng</Button>
               </Grid>
               <Grid item sm={3}>
-                <Button startIcon={<Home />} color='error' variant="text" size='medium'>Home service</Button>
+                <Button href="http://localhost:3000/bussinesses/dọn nhà" startIcon={<Home />} color='error' variant="text" size='medium'>Dọn nhà</Button>
               </Grid>
               <Grid item sm={3}>
-                <Button startIcon={<DeliveryDining />} color='error' variant="text" size='medium'>Delivery</Button>
+                <Button href="http://localhost:3000/bussinesses/vận chuyển" startIcon={<DeliveryDining />} color='error' variant="text" size='medium'>vận chuyển</Button>
               </Grid>
             </Grid>
           </Container>
@@ -175,7 +186,7 @@ function LandingPage() {
         <div className={classes.firstCardLine}>
           <Container maxWidth="md">
             <Typography textAlign='center' variant='h5' sx={{ color: 'red', fontWeight: 'bold', padding: 2 }} >
-              Find the best bussiness in town
+              Tìm các dịch vụ tốt nhất ở Đà Nẵng
             </Typography>
             <Grid container spacing={2}>
               <Grid item sm={3}>
@@ -188,11 +199,11 @@ function LandingPage() {
                   />
                   <CardContent>
                     <Typography textAlign='center' gutterBottom variant="h6" component="div">
-                      Phone Repair
+                      Sửa Điện Thoại
                     </Typography>
                   </CardContent>
                   <CardActions>
-                    <Button size="small">Take a look</Button>
+                    <Button href="http://localhost:3000/bussinesses/điện thoại" size="small">Xem qua</Button>
                   </CardActions>
                 </Card>
               </Grid>
@@ -206,11 +217,11 @@ function LandingPage() {
                   />
                   <CardContent>
                     <Typography textAlign='center' gutterBottom variant="h6" component="div">
-                      Hotel
+                      Khách Sạn
                     </Typography>
                   </CardContent>
                   <CardActions>
-                    <Button size="small">Take a look</Button>
+                    <Button href="http://localhost:3000/bussinesses/khách sạn" size="small">Xem qua</Button>
                   </CardActions>
                 </Card>
               </Grid>
@@ -224,11 +235,11 @@ function LandingPage() {
                   />
                   <CardContent>
                     <Typography textAlign='center' gutterBottom variant="h6" component="div">
-                      Dry cleaning
+                      Giặt Ủi
                     </Typography>
                   </CardContent>
                   <CardActions>
-                    <Button size="small">Take a look</Button>
+                    <Button href="http://localhost:3000/bussinesses/giặt ủi" size="small">Xem qua</Button>
                   </CardActions>
                 </Card>
               </Grid>
@@ -241,12 +252,12 @@ function LandingPage() {
                     alt="green iguana"
                   />
                   <CardContent>
-                    <Typography textAlign='center' gutterBottom variant="h6" component="div">
+                    <Typography href="http://localhost:3000/bussinesses/massage" textAlign='center' gutterBottom variant="h6" component="div">
                       Massage
                     </Typography>
                   </CardContent>
                   <CardActions>
-                    <Button size="small">Take a look</Button>
+                    <Button size="small">Xem qua</Button>
                   </CardActions>
                 </Card>
               </Grid>
@@ -300,7 +311,7 @@ function LandingPage() {
               {
                 bussinesses.map(bussiness => (
                   <Grid item sm={4}>
-                    <Link href='#' underline='none'>
+                    <Link href={`http://localhost:3000/bussinesses/${bussiness.category.categoryName}/${bussiness.id}`} underline='none'>
                       <Card sx={{ maxWidth: 345 }}>
                         <CardMedia
                           component="img"
@@ -329,7 +340,7 @@ function LandingPage() {
             justifyContent="center"
             alignItems="center"
           >
-            <Link href='#' sx={{ padding: 1 }}>See more hot and new bussinesses</Link>
+            <Link href='#' sx={{ padding: 1 }}>Xem thêm nhiều dịch vụ nổi tiếng khác</Link>
           </Stack>
         </div>
         <Copyright sx={{ mt: 8, mb: 4 }} />

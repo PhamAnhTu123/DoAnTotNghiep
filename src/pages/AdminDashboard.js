@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Typography from '@mui/material/Typography';
 import { DataGrid } from '@mui/x-data-grid';
 import Grid from '@mui/material/Grid';
@@ -11,6 +11,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Link from '@mui/material/Link';
 import Dashboard from './Dashboard';
+import axios from 'axios';
 
 
 function Copyright(props) {
@@ -40,46 +41,47 @@ const rowers = [
 
 const columns = [
   { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'firstName', headerName: 'First name', width: 130 },
-  { field: 'lastName', headerName: 'Last name', width: 130 },
-  {
-    field: 'age',
-    headerName: 'Age',
-    type: 'number',
-    width: 100,
-  },
-  {
-    field: 'fullName',
-    headerName: 'Full name',
-    description: 'This column has a value getter and is not sortable.',
-    sortable: false,
-    width: 200,
-    valueGetter: (params) =>
-      `${params.getValue(params.id, 'firstName') || ''} ${params.getValue(params.id, 'lastName') || ''
-      }`,
-  },
-];
-
-const rows = [
-  { id: 1, lastName: 'Snow', firstName: 'Jon', age: 35 },
-  { id: 2, lastName: 'Lannister', firstName: 'Cersei', age: 42 },
-  { id: 3, lastName: 'Lannister', firstName: 'Jaime', age: 45 },
-  { id: 4, lastName: 'Stark', firstName: 'Arya', age: 16 },
-  { id: 5, lastName: 'Targaryen', firstName: 'Daenerys', age: null },
-  { id: 6, lastName: 'Melisandre', firstName: null, age: 150 },
-  { id: 7, lastName: 'Clifford', firstName: 'Ferrara', age: 44 },
-  { id: 8, lastName: 'Frances', firstName: 'Rossini', age: 36 },
-  { id: 9, lastName: 'Roxie', firstName: 'Harvey', age: 65 },
+  { field: 'fullname', headerName: 'Tên đầy đủ', width: 130 },
+  { field: 'userName', headerName: 'Tên tài khoản', width: 130 },
+  { field: 'email', headerName: 'Email', width: 130 },
 ];
 
 
 const AdminDashboard = () => {
+  const [users, setUsers] = useState([]);
+  const [owners, setOwners] = useState([]);
+  const [bussinesses, setBussinesses] = useState([]);
+
+  useEffect(() => {
+    axios.get(`http://localhost:8080/api/v1/bussinesses?limit=${100}`).then(res => {
+      setBussinesses(res.data.docs)
+      console.log(res.data.docs)
+    });
+    axios.get(`http://localhost:8080/api/v1/users?limit=${100}`, {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('admin')}`,
+      }
+    }).then(res => {
+      setUsers(res.data.docs)
+      console.log(res.data.docs)
+    });
+    axios.get(`http://localhost:8080/api/v1/owners?limit=${100}`, {
+      headers: {
+        "Authorization": `Bearer ${window.localStorage.getItem('admin')}`,
+      }
+    }).then(res => {
+      setOwners(res.data.docs)
+      console.log(res.data.docs)
+    });
+  }, [])
+
   return (
     <Dashboard>
 
       <Grid container spacing={3}>
         {/* Chart */}
-        <Grid item xs={12} md={8} lg={9}>
+        <Grid item xs={12} md={6} lg={6}>
+          <Typography variant='h5'>Danh sách người dùng</Typography>
           <Paper
             sx={{
               p: 2,
@@ -89,7 +91,7 @@ const AdminDashboard = () => {
             }}
           >
             <DataGrid
-              rows={rows}
+              rows={users}
               columns={columns}
               pageSize={5}
               rowsPerPageOptions={[5]}
@@ -97,7 +99,8 @@ const AdminDashboard = () => {
           </Paper>
         </Grid>
         {/* Recent Deposits */}
-        <Grid item xs={12} md={4} lg={3}>
+        <Grid item xs={12} md={6} lg={6}>
+        <Typography variant='h5'>Danh sách chủ doanh nghiệp</Typography>
           <Paper
             sx={{
               p: 2,
@@ -106,36 +109,43 @@ const AdminDashboard = () => {
               height: 300,
             }}
           >
+            <DataGrid
+              rows={owners}
+              columns={columns}
+              pageSize={5}
+              rowsPerPageOptions={[5]}
+            />
           </Paper>
         </Grid>
         {/* Recent Orders */}
         <Grid item xs={12}>
+        <Typography variant='h5'>Danh sách doanh nghiệp</Typography>
           <Paper sx={{ p: 2, height: 300, display: 'flex', flexDirection: 'column' }}>
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 650 }} aria-label="simple table">
                 <TableHead>
                   <TableRow>
-                    <TableCell>Dessert (100g serving)</TableCell>
-                    <TableCell align="right">Calories</TableCell>
-                    <TableCell align="right">Fat&nbsp;(g)</TableCell>
-                    <TableCell align="right">Carbs&nbsp;(g)</TableCell>
-                    <TableCell align="right">Protein&nbsp;(g)</TableCell>
+                    <TableCell>Tên doanh nghiệp</TableCell>
+                    <TableCell>Mô tả</TableCell>
+                    <TableCell>Trạng thại</TableCell>
+                    <TableCell>Địa chỉ</TableCell>
+                    <TableCell>Thời gian hoạt động</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {rowers.map((row) => (
+                  {bussinesses.map((row) => (
                     <TableRow
                       onClick={() => { console.log('some') }}
-                      key={row.name}
+                      key={row.id}
                       sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     >
                       <TableCell component="th" scope="row">
-                        {row.name}
+                        {row.bussinessName}
                       </TableCell>
-                      <TableCell align="right">{row.calories}</TableCell>
-                      <TableCell align="right">{row.fat}</TableCell>
-                      <TableCell align="right">{row.carbs}</TableCell>
-                      <TableCell align="right">{row.protein}</TableCell>
+                      <TableCell>{row.bussinessDescription}</TableCell>
+                      <TableCell>{row.status}</TableCell>
+                      <TableCell>{row.address}</TableCell>
+                      <TableCell>{row.availableTime}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

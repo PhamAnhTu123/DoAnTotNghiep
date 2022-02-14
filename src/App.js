@@ -8,6 +8,7 @@ import BussinessManagement from "./pages/BussinessManagement";
 import OwnerDashboard from "./pages/OwnerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminBussiness from "./pages/AdminBussiness";
+import AdminUser from "./pages/AdminUser";
 import AdminBussinessDetail from './pages/AdminBussinessDetail';
 import TestImage from "./pages/TestImage";
 import BussinessSignIn from "./pages/BussinessSignIn";
@@ -38,6 +39,7 @@ function App() {
         <Route path='admin/login' element={<AdminLogin/>} />
         <Route path='/dashboard' element={<AdminDashboard/>} />
         <Route path='/dashboard/bussinesses' element={<AdminBussiness/>} />
+        <Route path='/dashboard/users' element={<AdminUser/>} />
         <Route path='/dashboard/bussinesses/:id' element={<AdminBussinessDetail/>} />
         <Route path='/signup' element={<Signup/>} />
         <Route path='/test' element={<TestImage/>} />
